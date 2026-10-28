@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Create account · Wattcast{% endblock %}
+{% block body %}
+<main class="auth-shell">
+  <section class="auth-panel">
+    <div class="brand-mark">
+      <svg viewBox="0 0 48 48" aria-hidden="true">
+        <polygon points="24,4 44,16 44,32 24,44 4,32 4,16" fill="none" stroke="currentColor" stroke-width="2"/>
+        <path d="M16 28 L24 12 L32 28 H27 V36 H21 V28 Z" fill="currentColor"/>
+      </svg>
+      <div>
+        <p class="eyebrow">Wattcast</p>
+        <h1>Create login</h1>
+      </div>
+    </div>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="banner {{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+    <form method="post" class="stack">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+      <label>Full name
+        <input type="text" name="name" required minlength="2" />
+      </label>
+      <label>Work email
+        <input type="email" name="email" required />
+      </label>
+      <label>Password (min 8 characters)
+        <input type="password" name="password" required minlength="8" />
+      </label>
+      <button class="btn primary" type="submit">Create account</button>
+    </form>
+    <p>Already registered? <a href="{{ url_for('login') }}">Sign in</a></p>
+  </section>
+  <aside class="auth-art">
+    <p class="eyebrow">Access</p>
+    <h2>Accounts are for operators who ingest telemetry and review dispatch logs.</h2>
+  </aside>
+</main>
+{% endblock %}

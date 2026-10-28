@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% block title %}Control room · Wattcast{% endblock %}
+{% block body %}
+<header class="topbar">
+  <div class="brand-mark compact">
+    <svg viewBox="0 0 48 48" aria-hidden="true">
+      <polygon points="24,4 44,16 44,32 24,44 4,32 4,16" fill="none" stroke="currentColor" stroke-width="2"/>
+      <path d="M16 28 L24 12 L32 28 H27 V36 H21 V28 Z" fill="currentColor"/>
+    </svg>
+    <div>
+      <p class="eyebrow">Wattcast</p>
+      <strong>Smart Energy Microgrid</strong>
+    </div>
+  </div>
+  <nav class="top-actions">
+    <button id="themeToggle" class="btn ghost" type="button" aria-label="Toggle color theme">Dark</button>
+    <span class="who">{{ current_user.name }} · {{ current_user.role }}</span>
+    <form method="post" action="{{ url_for('logout') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+      <button class="btn ghost" type="submit">Sign out</button>
+    </form>
+  </nav>
+</header>
+
+<div id="alertDock" class="alert-dock" hidden></div>
+
+<main class="layout">
+  <section class="kpis" id="kpiRow">
+    <article class="card kpi">
+      <p class="eyebrow">Active source</p>
+      <h2 id="kpiMode">—</h2>
+      <p class="muted" id="kpiModeMeta">Run a forecast to arm dispatch</p>
+    </article>
+    <article class="card kpi">
+      <p class="eyebrow">Now / peak demand</p>
+      <h2><span id="kpiDemand">—</span> <small>kW</small></h2>
+      <p class="muted">Peak 24h: <span id="kpiPeak">—</span> kW</p>
+    </article>
+    <article class="card kpi">
+      <p class="eyebrow">Battery SOC</p>
+      <div class="soc-wrap">
+        <div class="soc-bar"><span id="socFill"></span></div>
+        <h2 id="kpiSoc">—%</h2>
+      </div>
+      <p class="muted">Simulated 800 kWh storage bank</p>
+    </article>
+    <article class="card kpi" id="overloadCard">
+      <p class="eyebrow">Overload watch</p>
+      <h2 id="kpiOverload">Clear</h2>
+      <p class="muted" id="kpiOverloadMeta">Threshold 200 kW</p>
+    </article>
+  </section>
+
+  <section class="grid-2">
+    <article class="card">
+      <div class="card-head">
+        <div>
+          <p class="eyebrow">Forecast</p>
+          <h3>24-hour load curve</h3>
+        </div>
+        <p class="chip" id="modelChip">model: —</p>
+      </div>
+      <canvas id="loadChart" height="140"></canvas>
+    </article>
+    <article class="card">
+      <div class="card-head">
+        <div>
+          <p class="eyebrow">Dispatch strip</p>
+          <h3>Hourly grid state</h3>
+        </div>
+      </div>
+      <div id="dispatchStrip" class="dispatch-strip"></div>
+      <div class="legend">
+        <span><i class="swatch storage"></i> Renewable storage</span>
+        <span><i class="swatch grid"></i> Main grid</span>
+        <span><i class="swatch overload"></i> Overload hour</span>
+      </div>
+    </article>
+  </section>
+
+  <section class="grid-2">
+    <article class="card">
+      <div class="card-head">
+        <div>
+          <p class="eyebrow">Telemetry ingest</p>
+          <h3>CSV upload or live form</h3>
+        </div>
+        <a class="btn ghost" href="/api/sample-template">Download template</a>
+      </div>
+      <form id="csvForm" class="dropzone">
+        <input id="csvFile" type="file" accept=".csv" />
+        <p>Drop <code>sample_test_input.csv</code> or any file with timestamp, ambient_temp_c, humidity_pct, solar_irradiance_wm2.</p>
+        <div class="row-actions">
+          <button class="btn primary" type="submit">Forecast from CSV</button>
+          <button class="btn" id="sampleBtn" type="button">Run bundled sample day</button>
+        </div>
+      </form>
+      <hr />
+      <form id="liveForm" class="stack">
+        <div class="form-grid">
+          <label>Timestamp
+            <input type="datetime-local" name="timestamp" id="formTs" required />
+          </label>
+          <label>Ambient °C
+            <input type="number" step="0.1" name="ambient_temp_c" value="32.4" required />
+          </label>
+          <label>Humidity %
+            <input type="number" step="0.1" name="humidity_pct" value="48" required />
+          </label>
+          <label>Irradiance W/m²
+            <input type="number" step="0.1" name="solar_irradiance_wm2" value="640" required />
+          </label>
+        </div>
+        <label class="check">
+          <input type="checkbox" id="fillDay" checked />
+          Autofill 24 hourly rows from this start time using the live weather values as a seed
+        </label>
+        <button class="btn primary" type="submit">Forecast from form</button>
+      </form>
+      <p class="error" id="ingestError" hidden></p>
+    </article>
+
+    <article class="card">
+      <div class="card-head">
+        <div>
+          <p class="eyebrow">Switching log</p>
+          <h3>Power-source transitions</h3>
+        </div>
+        <div class="row-actions">
+          <a class="btn" href="/api/export/csv">Export CSV</a>
+          <a class="btn" href="/api/export/pdf">Export PDF</a>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Hour</th>
+              <th>kW</th>
+              <th>Mode</th>
+              <th>SOC</th>
+              <th>Alert</th>
+            </tr>
+          </thead>
+          <tbody id="logBody">
+            <tr><td colspan="5" class="muted">No dispatch log yet.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </article>
+  </section>
+</main>
+{% endblock %}
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,30 @@
+{
+  "feature_names": [
+    "bias",
+    "ambient_temp_c",
+    "humidity_pct",
+    "solar_irradiance_wm2",
+    "sin_hour",
+    "cos_hour",
+    "sin_2hour",
+    "cos_2hour",
+    "is_morning_peak",
+    "is_evening_peak",
+    "is_weekend"
+  ],
+  "coefficients": [
+    2.46548365,
+    4.43060787,
+    0.19320659,
+    0.01390443,
+    -8.84889282,
+    -6.68512613,
+    -11.23077649,
+    -4.98580214,
+    18.58363386,
+    47.69357491,
+    2.55690214
+  ],
+  "train_rmse": 7.5327,
+  "notes": "Ordinary least squares fallback used when QuickML is not configured."
+}

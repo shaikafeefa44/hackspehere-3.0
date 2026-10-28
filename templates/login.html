@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Sign in · Wattcast{% endblock %}
+{% block body %}
+<main class="auth-shell">
+  <section class="auth-panel">
+    <div class="brand-mark">
+      <svg viewBox="0 0 48 48" aria-hidden="true">
+        <polygon points="24,4 44,16 44,32 24,44 4,32 4,16" fill="none" stroke="currentColor" stroke-width="2"/>
+        <path d="M16 28 L24 12 L32 28 H27 V36 H21 V28 Z" fill="currentColor"/>
+      </svg>
+      <div>
+        <p class="eyebrow">Wattcast</p>
+        <h1>Microgrid Control</h1>
+      </div>
+    </div>
+    <p class="lede">Engineer access to 24-hour demand forecasting, storage dispatch, and overload watch.</p>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="banner {{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+    <form method="post" class="stack" id="loginForm">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+      <label>Work email
+        <input type="email" name="email" required autocomplete="username" />
+      </label>
+      <label>Password
+        <input type="password" name="password" required autocomplete="current-password" />
+      </label>
+      <div class="row-actions">
+        <button class="btn primary" type="submit">Enter control room</button>
+        <button class="btn ghost" type="button" id="demoFill">Use demo account</button>
+      </div>
+    </form>
+    <p class="muted">Judges: use the demo account button, then sign in.</p>
+    <script>
+      document.getElementById("demoFill")?.addEventListener("click", () => {
+        const form = document.getElementById("loginForm");
+        form.email.value = "engineer@hacksphere.local";
+        form.password.value = "Grid@2026";
+        form.email.focus();
+      });
+    </script>
+    <p>Need an account? <a href="{{ url_for('signup') }}">Create engineer login</a></p>
+  </section>
+  <aside class="auth-art">
+    <p class="eyebrow">Dispatch rules</p>
+    <h2>Storage takes the evening peak. The main grid holds the quiet hours.</h2>
+    <ul>
+      <li>Demand &gt; 160 kW or 18:00–22:00 → Renewable Storage Mode</li>
+      <li>Otherwise → Main Grid Mode</li>
+      <li>≥ 200 kW → independent critical overload alert</li>
+    </ul>
+  </aside>
+</main>
+{% endblock %}

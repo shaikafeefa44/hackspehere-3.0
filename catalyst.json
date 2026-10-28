@@ -1,0 +1,11 @@
+{
+  "deployment": {
+    "appsail": [
+      {
+        "name": "hacksphere-microgrid",
+        "source": ".",
+        "command": "gunicorn --bind 0.0.0.0:${X_ZOHO_CATALYST_LISTEN_PORT} --workers 2 --threads 2 --timeout 120 app:app"
+      }
+    ]
+  }
+}

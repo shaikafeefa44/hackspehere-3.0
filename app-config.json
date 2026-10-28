@@ -1,0 +1,8 @@
+{
+  "command": "gunicorn --bind 0.0.0.0:${X_ZOHO_CATALYST_LISTEN_PORT} --workers 2 --threads 2 --timeout 120 app:app",
+  "build_path": ".",
+  "stack": "latest",
+  "env_variables": {},
+  "memory": 512,
+  "platform": "platform_independent"
+}
