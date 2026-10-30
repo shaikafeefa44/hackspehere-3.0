@@ -1,14 +1,13 @@
-# HackSphere 3.0 — Smart Energy Microgrid & Demand Forecasting Engine
+# wattcast — Smart Energy Microgrid & Demand Forecasting Engine
 
 End-to-end control-room app that ingests weather telemetry, forecasts the next 24 hours of energy demand (`target_demand_kw`), and emits **Main Grid** vs **Renewable Storage** dispatch signals. Built for **Zoho Catalyst** (AppSail + QuickML).
-
-> **Team:** `<Tech titans >` · **Live app:** `<public Catalyst AppSail URL>`
+  **Live app:** `<public Catalyst AppSail URL>
 
 ---
 
 ## Table of contents
 
-- [HackSphere 3.0 — Smart Energy Microgrid \& Demand Forecasting Engine](#hacksphere-30--smart-energy-microgrid--demand-forecasting-engine)
+- [wattcast— Smart Energy Microgrid \& Demand Forecasting Engine](#wattcast--smart-energy-microgrid--demand-forecasting-engine)
   - [Table of contents](#table-of-contents)
   - [What it does](#what-it-does)
   - [Architecture](#architecture)
