@@ -2,7 +2,7 @@
 
 End-to-end control-room app that ingests weather telemetry, forecasts the next 24 hours of energy demand (`target_demand_kw`), and emits **Main Grid** vs **Renewable Storage** dispatch signals. Built for **Zoho Catalyst** (AppSail + QuickML).
 
-> **Team:** `<TeamName>` · **Live app:** `<public Catalyst AppSail URL>`
+> **Team:** `<Tech titans >` · **Live app:** `<public Catalyst AppSail URL>`
 
 ---
 
