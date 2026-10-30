@@ -1,15 +1,23 @@
 {% extends "base.html" %}
-{% block title %}Control room · Wattcast{% endblock %}
+{% block title %}Dashboard · Wattcast{% endblock %}
 {% block body %}
 <header class="topbar">
   <div class="brand-mark compact">
-    <svg viewBox="0 0 48 48" aria-hidden="true">
-      <polygon points="24,4 44,16 44,32 24,44 4,32 4,16" fill="none" stroke="currentColor" stroke-width="2"/>
-      <path d="M16 28 L24 12 L32 28 H27 V36 H21 V28 Z" fill="currentColor"/>
+    <svg class="logo" viewBox="0 0 64 64" role="img" aria-label="Wattcast logo">
+      <defs>
+        <linearGradient id="wcg2" x1="0" y1="1" x2="1" y2="0">
+          <stop offset="0" stop-color="#b6e14a"/>
+          <stop offset="1" stop-color="#22d3ee"/>
+        </linearGradient>
+      </defs>
+      <rect x="2" y="2" width="60" height="60" rx="16" fill="#0c1210" stroke="url(#wcg2)" stroke-width="2"/>
+      <path d="M12 20 L22 46 L32 26 L42 46 L50 24" fill="none" stroke="url(#wcg2)" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M50 24 L55 15" fill="none" stroke="#22d3ee" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="1 5"/>
+      <circle cx="55" cy="14" r="3.2" fill="#22d3ee"/>
     </svg>
     <div>
-      <p class="eyebrow">Wattcast</p>
-      <strong>Smart Energy Microgrid</strong>
+      <p class="eyebrow">Forecast. Dispatch. Protect.</p>
+      <strong>Wattcast</strong>
     </div>
   </div>
   <nav class="top-actions">
@@ -24,134 +32,227 @@
 
 <div id="alertDock" class="alert-dock" hidden></div>
 
-<main class="layout">
-  <section class="kpis" id="kpiRow">
-    <article class="card kpi">
-      <p class="eyebrow">Active source</p>
-      <h2 id="kpiMode">—</h2>
-      <p class="muted" id="kpiModeMeta">Run a forecast to arm dispatch</p>
-    </article>
-    <article class="card kpi">
-      <p class="eyebrow">Now / peak demand</p>
-      <h2><span id="kpiDemand">—</span> <small>kW</small></h2>
-      <p class="muted">Peak 24h: <span id="kpiPeak">—</span> kW</p>
-    </article>
-    <article class="card kpi">
-      <p class="eyebrow">Battery SOC</p>
-      <div class="soc-wrap">
-        <div class="soc-bar"><span id="socFill"></span></div>
-        <h2 id="kpiSoc">—%</h2>
-      </div>
-      <p class="muted">Simulated 800 kWh storage bank</p>
-    </article>
-    <article class="card kpi" id="overloadCard">
-      <p class="eyebrow">Overload watch</p>
-      <h2 id="kpiOverload">Clear</h2>
-      <p class="muted" id="kpiOverloadMeta">Threshold 200 kW</p>
-    </article>
-  </section>
+<div class="app">
+  <nav class="side" aria-label="Dashboard sections">
+    <button class="nav-btn active" type="button" data-view="overview">Overview</button>
+    <button class="nav-btn" type="button" data-view="forecast">Forecast</button>
+    <button class="nav-btn" type="button" data-view="data">Add data</button>
+    <button class="nav-btn" type="button" data-view="log">Switching log</button>
+    <button class="nav-btn" type="button" data-view="assistant">Ask Wattcast</button>
+  </nav>
 
-  <section class="grid-2">
-    <article class="card">
-      <div class="card-head">
-        <div>
-          <p class="eyebrow">Forecast</p>
-          <h3>24-hour load curve</h3>
-        </div>
-        <p class="chip" id="modelChip">model: —</p>
-      </div>
-      <canvas id="loadChart" height="140"></canvas>
-    </article>
-    <article class="card">
-      <div class="card-head">
-        <div>
-          <p class="eyebrow">Dispatch strip</p>
-          <h3>Hourly grid state</h3>
-        </div>
-      </div>
-      <div id="dispatchStrip" class="dispatch-strip"></div>
-      <div class="legend">
-        <span><i class="swatch storage"></i> Renewable storage</span>
-        <span><i class="swatch grid"></i> Main grid</span>
-        <span><i class="swatch overload"></i> Overload hour</span>
-      </div>
-    </article>
-  </section>
+  <main class="layout">
+    <!-- OVERVIEW -->
+    <section class="view active" id="view-overview">
+      <section class="kpis" id="kpiRow">
+        <article class="card kpi">
+          <p class="eyebrow">Active source</p>
+          <h2 id="kpiMode">—</h2>
+          <p class="muted" id="kpiModeMeta">Run a forecast to arm dispatch</p>
+        </article>
+        <article class="card kpi">
+          <p class="eyebrow">Now / peak demand</p>
+          <h2><span id="kpiDemand">—</span> <small>kW</small></h2>
+          <p class="muted">Peak 24h: <span id="kpiPeak">—</span> kW</p>
+        </article>
+        <article class="card kpi">
+          <p class="eyebrow">Battery SOC</p>
+          <div class="soc-wrap">
+            <div class="soc-bar"><span id="socFill"></span></div>
+            <h2 id="kpiSoc">—%</h2>
+          </div>
+          <p class="muted">Simulated 800 kWh storage bank</p>
+        </article>
+        <article class="card kpi" id="overloadCard">
+          <p class="eyebrow">Overload watch</p>
+          <h2 id="kpiOverload">Clear</h2>
+          <p class="muted" id="kpiOverloadMeta">Threshold 200 kW</p>
+        </article>
+      </section>
 
-  <section class="grid-2">
-    <article class="card">
-      <div class="card-head">
-        <div>
-          <p class="eyebrow">Telemetry ingest</p>
-          <h3>CSV upload or live form</h3>
+      <article class="card">
+        <div class="card-head">
+          <div>
+            <p class="eyebrow">Dispatch strip</p>
+            <h3>Hourly grid state</h3>
+          </div>
+          <button class="btn primary" id="quickSample" type="button">Run sample day</button>
         </div>
-        <a class="btn ghost" href="/api/sample-template">Download template</a>
-      </div>
-      <form id="csvForm" class="dropzone">
-        <input id="csvFile" type="file" accept=".csv" />
-        <p>Drop <code>sample_test_input.csv</code> or any file with timestamp, ambient_temp_c, humidity_pct, solar_irradiance_wm2.</p>
-        <div class="row-actions">
-          <button class="btn primary" type="submit">Forecast from CSV</button>
-          <button class="btn" id="sampleBtn" type="button">Run bundled sample day</button>
+        <div id="dispatchStrip" class="dispatch-strip"></div>
+        <div class="legend">
+          <span><i class="swatch storage"></i> Renewable storage</span>
+          <span><i class="swatch grid"></i> Main grid</span>
+          <span><i class="swatch overload"></i> Overload hour</span>
         </div>
-      </form>
-      <hr />
-      <form id="liveForm" class="stack">
-        <div class="form-grid">
-          <label>Timestamp
-            <input type="datetime-local" name="timestamp" id="formTs" required />
-          </label>
-          <label>Ambient °C
-            <input type="number" step="0.1" name="ambient_temp_c" value="32.4" required />
-          </label>
-          <label>Humidity %
-            <input type="number" step="0.1" name="humidity_pct" value="48" required />
-          </label>
-          <label>Irradiance W/m²
-            <input type="number" step="0.1" name="solar_irradiance_wm2" value="640" required />
-          </label>
-        </div>
-        <label class="check">
-          <input type="checkbox" id="fillDay" checked />
-          Autofill 24 hourly rows from this start time using the live weather values as a seed
-        </label>
-        <button class="btn primary" type="submit">Forecast from form</button>
-      </form>
-      <p class="error" id="ingestError" hidden></p>
-    </article>
+      </article>
+    </section>
 
-    <article class="card">
-      <div class="card-head">
-        <div>
-          <p class="eyebrow">Switching log</p>
-          <h3>Power-source transitions</h3>
+    <!-- FORECAST -->
+    <section class="view" id="view-forecast">
+      <article class="card">
+        <div class="card-head">
+          <div>
+            <p class="eyebrow">Forecast</p>
+            <h3>24-hour load curve</h3>
+          </div>
+          <p class="chip" id="modelChip">model: —</p>
         </div>
-        <div class="row-actions">
-          <a class="btn" href="/api/export/csv">Export CSV</a>
-          <a class="btn" href="/api/export/pdf">Export PDF</a>
+        <canvas id="loadChart" height="140"></canvas>
+      </article>
+    </section>
+
+    <!-- ADD DATA -->
+    <section class="view" id="view-data">
+      <article class="card">
+        <div class="card-head">
+          <div>
+            <p class="eyebrow">Telemetry ingest</p>
+            <h3>CSV upload or live form</h3>
+          </div>
+          <a class="btn ghost" href="/api/sample-template">Download template</a>
         </div>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Hour</th>
-              <th>kW</th>
-              <th>Mode</th>
-              <th>SOC</th>
-              <th>Alert</th>
-            </tr>
-          </thead>
-          <tbody id="logBody">
-            <tr><td colspan="5" class="muted">No dispatch log yet.</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </article>
-  </section>
-</main>
+        <form id="csvForm" class="dropzone">
+          <input id="csvFile" type="file" accept=".csv" />
+          <p>Upload a CSV with: timestamp, ambient_temp_c, humidity_pct, solar_irradiance_wm2.</p>
+          <div class="row-actions">
+            <button class="btn primary" type="submit">Forecast from CSV</button>
+            <button class="btn" id="sampleBtn" type="button">Run bundled sample day</button>
+          </div>
+        </form>
+        <hr />
+        <form id="liveForm" class="stack">
+          <div class="form-grid">
+            <label>Timestamp
+              <input type="datetime-local" name="timestamp" id="formTs" required />
+            </label>
+            <label>Ambient °C
+              <input type="number" step="0.1" name="ambient_temp_c" value="32.4" required />
+            </label>
+            <label>Humidity %
+              <input type="number" step="0.1" name="humidity_pct" value="48" required />
+            </label>
+            <label>Irradiance W/m²
+              <input type="number" step="0.1" name="solar_irradiance_wm2" value="640" required />
+            </label>
+          </div>
+          <label class="check">
+            <input type="checkbox" id="fillDay" checked />
+            Autofill 24 hourly rows from this start time using these values as a seed
+          </label>
+          <button class="btn primary" type="submit">Forecast from form</button>
+        </form>
+        <p class="error" id="ingestError" hidden></p>
+      </article>
+    </section>
+
+    <!-- SWITCHING LOG -->
+    <section class="view" id="view-log">
+      <article class="card">
+        <div class="card-head">
+          <div>
+            <p class="eyebrow">Switching log</p>
+            <h3>Power-source transitions</h3>
+          </div>
+          <div class="row-actions">
+            <a class="btn" href="/api/export/csv">Export CSV</a>
+            <a class="btn" href="/api/export/pdf">Export PDF</a>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Hour</th><th>kW</th><th>Mode</th><th>SOC</th><th>Alert</th></tr>
+            </thead>
+            <tbody id="logBody">
+              <tr><td colspan="5" class="muted">No dispatch log yet.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </article>
+    </section>
+
+    <!-- ASK WATTCAST -->
+    <section class="view" id="view-assistant">
+      <article class="card assistant-card">
+        <div class="card-head">
+          <div>
+            <p class="eyebrow">Smart Energy Assistant</p>
+            <h3>Ask Wattcast</h3>
+          </div>
+          <span class="chip" id="assistantSourceChip">Rules Engine</span>
+        </div>
+
+        <div id="assistantNoForecast" class="assistant-notice" hidden>
+          <div class="notice-content">
+            <span class="notice-icon">⚡</span>
+            <div>
+              <strong>No active forecast loaded.</strong>
+              <p class="muted">Wattcast can answer general dispatch rules and storage specs. Run a sample day or upload telemetry to analyze live hours.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="chat-container">
+          <div class="chat-messages" id="chatMessages" role="log" aria-live="polite"></div>
+
+          <div class="chat-suggestions-area">
+            <p class="eyebrow">Suggestions</p>
+            <div class="chat-suggestions" id="chatSuggestions"></div>
+          </div>
+
+          <form id="chatForm" class="chat-form">
+            <input
+              type="text"
+              id="chatInput"
+              class="chat-input"
+              placeholder="Ask about peak demand, why storage was used, 6 PM status, battery SOC..."
+              maxlength="500"
+              autocomplete="off"
+              required
+            />
+            <button class="btn primary" type="submit" id="chatSendBtn">Send</button>
+          </form>
+        </div>
+      </article>
+    </section>
+  </main>
+</div>
 {% endblock %}
 {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+<script>
+  (function () {
+    const buttons = document.querySelectorAll(".nav-btn");
+    const views = document.querySelectorAll(".view");
+    function show(name) {
+      views.forEach((v) => v.classList.toggle("active", v.id === "view-" + name));
+      buttons.forEach((b) => b.classList.toggle("active", b.dataset.view === name));
+      history.replaceState(null, "", "#" + name);
+      window.dispatchEvent(new Event("resize"));
+    }
+    buttons.forEach((b) => b.addEventListener("click", () => show(b.dataset.view)));
+    document.getElementById("quickSample").addEventListener("click", () => {
+      document.getElementById("sampleBtn").click();
+    });
+
+    // After the user runs a forecast, jump to Overview to show the result.
+    let fromUser = false;
+    ["csvForm", "liveForm"].forEach((id) =>
+      document.getElementById(id).addEventListener("submit", () => { fromUser = true; })
+    );
+    document.getElementById("sampleBtn").addEventListener("click", () => { fromUser = true; });
+    const originalPaint = window.paint;
+    window.paint = function (payload) {
+      originalPaint(payload);
+      if (fromUser && payload && payload.hours && payload.hours.length) {
+        fromUser = false;
+        show("overview");
+      }
+    };
+
+    const start = location.hash.replace("#", "");
+    if (["overview", "forecast", "data", "log", "assistant"].includes(start)) show(start);
+  })();
+</script>
 {% endblock %}

@@ -160,6 +160,7 @@ function paint(payload) {
   renderStrip(hours);
   renderTable(hours);
   if (hours.length) renderChart(hours);
+  updateAssistantForecastStatus(hours.length > 0);
 }
 
 async function loadLatest() {
@@ -183,6 +184,178 @@ function expandDay(startLocal, seed) {
     });
   }
   return rows;
+}
+
+const assistantState = {
+  hasForecast: false,
+  initialized: false,
+};
+
+function appendChatMessage(role, text, source) {
+  const container = document.getElementById("chatMessages");
+  if (!container) return null;
+
+  const bubble = document.createElement("div");
+  bubble.className = `chat-bubble ${role}`;
+
+  const roleTag = document.createElement("div");
+  roleTag.className = "bubble-role";
+  roleTag.textContent = role === "user" ? "You" : "Wattcast AI";
+  bubble.appendChild(roleTag);
+
+  const body = document.createElement("div");
+  body.className = "bubble-text";
+  body.textContent = text;
+  bubble.appendChild(body);
+
+  if (role !== "user" && source) {
+    const meta = document.createElement("div");
+    meta.className = "bubble-meta";
+    meta.textContent = source === "llm" ? "Source: AI Model" : "Source: Rules Engine";
+    bubble.appendChild(meta);
+  }
+
+  container.appendChild(bubble);
+  container.scrollTop = container.scrollHeight;
+  return bubble;
+}
+
+function setAssistantSuggestions(suggestions) {
+  const container = document.getElementById("chatSuggestions");
+  if (!container) return;
+  container.innerHTML = "";
+  if (!suggestions || !suggestions.length) return;
+
+  suggestions.forEach((text) => {
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "suggestion-chip";
+    chip.textContent = text;
+    chip.addEventListener("click", () => {
+      const input = document.getElementById("chatInput");
+      if (input) {
+        input.value = text;
+        const form = document.getElementById("chatForm");
+        if (form) form.dispatchEvent(new Event("submit"));
+      }
+    });
+    container.appendChild(chip);
+  });
+}
+
+function setChatLoading(loading) {
+  const container = document.getElementById("chatMessages");
+  const input = document.getElementById("chatInput");
+  const btn = document.getElementById("chatSendBtn");
+  const existing = document.getElementById("chatLoadingIndicator");
+
+  if (loading) {
+    if (input) input.disabled = true;
+    if (btn) btn.disabled = true;
+    if (!existing && container) {
+      const bubble = document.createElement("div");
+      bubble.className = "chat-bubble assistant loading";
+      bubble.id = "chatLoadingIndicator";
+
+      const roleTag = document.createElement("div");
+      roleTag.className = "bubble-role";
+      roleTag.textContent = "Wattcast AI";
+      bubble.appendChild(roleTag);
+
+      const body = document.createElement("div");
+      body.className = "bubble-text";
+      body.textContent = "Analyzing forecast data...";
+      bubble.appendChild(body);
+
+      container.appendChild(bubble);
+      container.scrollTop = container.scrollHeight;
+    }
+  } else {
+    if (existing) existing.remove();
+    if (input) {
+      input.disabled = false;
+      input.focus();
+    }
+    if (btn) btn.disabled = false;
+  }
+}
+
+function updateAssistantSourceChip(source) {
+  const chip = document.getElementById("assistantSourceChip");
+  if (!chip) return;
+  chip.textContent = source === "llm" ? "AI Model (Active)" : "Rules Engine";
+}
+
+function updateAssistantForecastStatus(hasData) {
+  assistantState.hasForecast = hasData;
+  const notice = document.getElementById("assistantNoForecast");
+  if (notice) {
+    notice.hidden = Boolean(hasData);
+  }
+  if (!assistantState.initialized) {
+    assistantState.initialized = true;
+    if (hasData) {
+      appendChatMessage(
+        "assistant",
+        "Hello! I am Wattcast AI, your smart energy dispatch assistant. 24-hour demand predictions and storage schedules are ready. Ask me about peak hours, overloads, or specific times like 'why at 6 pm'."
+      );
+      setAssistantSuggestions([
+        "What is the peak hour?",
+        "Why was storage used?",
+        "Are there any overloads?",
+        "Battery status",
+      ]);
+    } else {
+      appendChatMessage(
+        "assistant",
+        "Hello! I am Wattcast AI. No forecast data is loaded yet. You can ask me about dispatch rules, or click 'Run sample day' in Overview to generate a live schedule."
+      );
+      setAssistantSuggestions([
+        "What are the dispatch rules?",
+        "How does battery storage work?",
+        "What triggers an overload alert?",
+      ]);
+    }
+  }
+}
+
+async function handleChatSubmit(ev) {
+  ev.preventDefault();
+  const input = document.getElementById("chatInput");
+  const q = (input?.value || "").trim();
+  if (!q) return;
+  if (q.length > 500) {
+    alert("Question must be 500 characters or fewer.");
+    return;
+  }
+
+  input.value = "";
+  appendChatMessage("user", q);
+  setChatLoading(true);
+
+  try {
+    const res = await fetch("/api/assistant", {
+      method: "POST",
+      headers: csrfHeaders({ "Content-Type": "application/json" }),
+      body: JSON.stringify({ question: q }),
+    });
+    const data = await readJson(res);
+    setChatLoading(false);
+
+    appendChatMessage("assistant", data.answer || "No response received.", data.source);
+    if (data.source) {
+      updateAssistantSourceChip(data.source);
+    }
+    if (Array.isArray(data.suggestions) && data.suggestions.length) {
+      setAssistantSuggestions(data.suggestions);
+    }
+  } catch (err) {
+    setChatLoading(false);
+    appendChatMessage(
+      "assistant",
+      `Error: ${err.message || "Could not reach Wattcast assistant. Please try again."}`
+    );
+  }
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -243,5 +416,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  loadLatest().catch(() => {});
+  const chatForm = document.getElementById("chatForm");
+  if (chatForm) {
+    chatForm.addEventListener("submit", handleChatSubmit);
+  }
+
+  loadLatest().catch(() => {
+    updateAssistantForecastStatus(false);
+  });
 });

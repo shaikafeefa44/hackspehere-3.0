@@ -33,6 +33,7 @@ from flask_cors import CORS
 from werkzeug.utils import secure_filename
 
 from backend.alerts import handle_overload_alerts
+from backend.assistant import answer_question
 from backend.config import Config
 from backend.db import (
     create_user,
@@ -291,6 +292,22 @@ def create_app(test_config: dict | None = None) -> Flask:
                 "alerts": data["alerts"],
             }
         )
+
+    @app.post("/api/assistant")
+    @login_required
+    @limiter.limit("30 per minute")
+    def api_assistant():
+        payload = request.get_json(silent=True) or {}
+        question = payload.get("question")
+        if not question or not isinstance(question, str) or not question.strip():
+            return jsonify({"error": "Question is required."}), 400
+        question = question.strip()
+        if len(question) > 500:
+            return jsonify({"error": "Question must be 500 characters or fewer."}), 400
+
+        data = latest_run(current_user()["id"])
+        result = answer_question(question, data)
+        return jsonify(result)
 
     @app.get("/api/alerts")
     @login_required

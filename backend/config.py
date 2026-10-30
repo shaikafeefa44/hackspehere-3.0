@@ -67,6 +67,9 @@ class Config:
     ZOHO_REFRESH_TOKEN = os.getenv("ZOHO_REFRESH_TOKEN", "").strip()
     ZOHO_ACCOUNTS_URL = os.getenv("ZOHO_ACCOUNTS_URL", "https://accounts.zoho.com").strip().rstrip("/")
 
+    LLM_ENDPOINT = os.getenv("LLM_ENDPOINT", "").strip()
+    LLM_AUTH_TOKEN = os.getenv("LLM_AUTH_TOKEN", "").strip()
+
     ALERT_EMAIL_TO = os.getenv("ALERT_EMAIL_TO", "")
     SMTP_HOST = os.getenv("SMTP_HOST", "")
     SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))

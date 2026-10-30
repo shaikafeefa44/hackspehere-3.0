@@ -4,16 +4,24 @@
 <main class="auth-shell">
   <section class="auth-panel">
     <div class="brand-mark">
-      <svg viewBox="0 0 48 48" aria-hidden="true">
-        <polygon points="24,4 44,16 44,32 24,44 4,32 4,16" fill="none" stroke="currentColor" stroke-width="2"/>
-        <path d="M16 28 L24 12 L32 28 H27 V36 H21 V28 Z" fill="currentColor"/>
+      <svg class="logo" viewBox="0 0 64 64" role="img" aria-label="Wattcast logo">
+        <defs>
+          <linearGradient id="wcg" x1="0" y1="1" x2="1" y2="0">
+            <stop offset="0" stop-color="#b6e14a"/>
+            <stop offset="1" stop-color="#22d3ee"/>
+          </linearGradient>
+        </defs>
+        <rect x="2" y="2" width="60" height="60" rx="16" fill="#0c1210" stroke="url(#wcg)" stroke-width="2"/>
+        <path d="M12 20 L22 46 L32 26 L42 46 L50 24" fill="none" stroke="url(#wcg)" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M50 24 L55 15" fill="none" stroke="#22d3ee" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="1 5"/>
+        <circle cx="55" cy="14" r="3.2" fill="#22d3ee"/>
       </svg>
       <div>
-        <p class="eyebrow">Wattcast</p>
-        <h1>Microgrid Control</h1>
+        <p class="eyebrow">Forecast. Dispatch. Protect.</p>
+        <h1>Wattcast</h1>
       </div>
     </div>
-    <p class="lede">Engineer access to 24-hour demand forecasting, storage dispatch, and overload watch.</p>
+    <p class="lede">Sign in to see your 24-hour demand forecast, storage dispatch plan and overload alerts.</p>
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
         {% for category, message in messages %}
@@ -23,27 +31,17 @@
     {% endwith %}
     <form method="post" class="stack" id="loginForm">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-      <label>Work email
+      <label>Email
         <input type="email" name="email" required autocomplete="username" />
       </label>
       <label>Password
         <input type="password" name="password" required autocomplete="current-password" />
       </label>
       <div class="row-actions">
-        <button class="btn primary" type="submit">Enter control room</button>
-        <button class="btn ghost" type="button" id="demoFill">Use demo account</button>
+        <button class="btn primary" type="submit">Sign in</button>
       </div>
     </form>
-    <p class="muted">Judges: use the demo account button, then sign in.</p>
-    <script>
-      document.getElementById("demoFill")?.addEventListener("click", () => {
-        const form = document.getElementById("loginForm");
-        form.email.value = "engineer@hacksphere.local";
-        form.password.value = "Grid@2026";
-        form.email.focus();
-      });
-    </script>
-    <p>Need an account? <a href="{{ url_for('signup') }}">Create engineer login</a></p>
+    <p>Need an account? <a href="{{ url_for('signup') }}">Create account</a></p>
   </section>
   <aside class="auth-art">
     <p class="eyebrow">Dispatch rules</p>
